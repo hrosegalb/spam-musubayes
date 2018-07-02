@@ -1,5 +1,5 @@
 # spam-musubayes
-Email spam detection using Naïve Bayes.
+A program that classifies spam versus non-spam emails using Naïve Bayes.
 
 # License
 Copyright 2018 Hannah Galbraith
