@@ -1,0 +1,1 @@
+spamdata <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
