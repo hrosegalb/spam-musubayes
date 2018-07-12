@@ -36,4 +36,7 @@ test_set <- rbind(spam_2, non_spam_2)
 mean_standard_dev <- function(dataset)
 {
   mean_sd_matrix <- matrix(0, nrow = 57, ncol = 4)
+  print(colMeans(dataset[1:57]))
 }
+
+mean_standard_dev(dataset=training_set)
