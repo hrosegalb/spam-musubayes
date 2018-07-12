@@ -16,8 +16,9 @@
 # https://stackoverflow.com/questions/26341246/r-subset-of-matrix-based-on-cell-value-of-one-column
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
-spam_df <- spambase[spambase$V58 == 1, ]
-non_spam_df <- spambase[spambase$V58 == 0, ]
+names(spambase) <- c(1:58)
+spam_df <- spambase[spambase[58] == 1, ]
+non_spam_df <- spambase[spambase[58] == 0, ]
 
 # Split spam_df and non_spam_df in half
 spam_rows <- nrow(spam_df)
@@ -30,3 +31,9 @@ non_spam_2 <- non_spam_df[(non_spam_rows/2):non_spam_rows, ]
 # Combine the two halves into a training set and test set
 training_set <- rbind(spam_1, non_spam_1)
 test_set <- rbind(spam_2, non_spam_2)
+
+# Calculate mean and standard deviation of each feature
+mean_standard_dev <- function(dataset)
+{
+  mean_sd_matrix <- matrix(0, nrow = 57, ncol = 4)
+}
