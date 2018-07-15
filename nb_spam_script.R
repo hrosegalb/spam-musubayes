@@ -35,8 +35,20 @@ test_set <- rbind(spam_2, non_spam_2)
 # Calculate mean and standard deviation of each feature
 mean_standard_dev <- function(dataset)
 {
+  # mean_sd_matrix[i][1] = mean for that feature given that it's spam
+  # mean_sd_matrix[i][2] = mean for that feature given that it's not spam
+  # mean_sd_matrix[i][3] = standard deviation for that feature given that it's spam
+  # mean_sd_matrix[i][4] = standard deviation for that feature given that it's not spam
+  
+  # Create an empty matrix to put feature means/standard deviations
   mean_sd_matrix <- matrix(0, nrow = 57, ncol = 4)
-  print(colMeans(dataset[1:57]))
+  
+  i <- 1:57
+  means <- aggregate(dataset[, i], by=list(dataset[, 58]), FUN=mean)
+  means <- as.matrix(means)
+  mean_sd_matrix[, 1] <- means[2, (2:58)]
+  mean_sd_matrix[, 2] <- means[1, (2:58)]
+  print(mean_sd_matrix)
 }
 
 mean_standard_dev(dataset=training_set)
