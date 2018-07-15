@@ -32,7 +32,8 @@ non_spam_2 <- non_spam_df[(non_spam_rows/2):non_spam_rows, ]
 training_set <- rbind(spam_1, non_spam_1)
 test_set <- rbind(spam_2, non_spam_2)
 
-# Calculate mean and standard deviation of each feature
+# Calculate mean and standard deviation of each feature in the training
+# dataset. Store the results in a matrix.
 mean_standard_dev <- function(dataset)
 {
   # mean_sd_matrix[i][1] = mean for that feature given that it's spam
@@ -40,15 +41,32 @@ mean_standard_dev <- function(dataset)
   # mean_sd_matrix[i][3] = standard deviation for that feature given that it's spam
   # mean_sd_matrix[i][4] = standard deviation for that feature given that it's not spam
   
-  # Create an empty matrix to put feature means/standard deviations
+  # Create an empty matrix to put feature means/standard deviations in
   mean_sd_matrix <- matrix(0, nrow = 57, ncol = 4)
   
+  # Loop through each column of the dataset and calculate the mean and
+  # standard deviations of each feature given that it's spam/not spam.
+  # Place the results in the corresponding columns of 'mean_sd_matrix'.
+  # Used https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group#1661144
+  # as a reference.
   i <- 1:57
   means <- aggregate(dataset[, i], by=list(dataset[, 58]), FUN=mean)
   means <- as.matrix(means)
+  standard_devs <- aggregate(dataset[, i], by=list(dataset[, 58]), FUN=sd)
+  standard_devs <- as.matrix(standard_devs)
+  
   mean_sd_matrix[, 1] <- means[2, (2:58)]
   mean_sd_matrix[, 2] <- means[1, (2:58)]
-  print(mean_sd_matrix)
+  mean_sd_matrix[, 3] <- standard_devs[2, (2:58)]
+  mean_sd_matrix[, 4] <- standard_devs[1, (2:58)]
+  
+  # So as to not mess up future calculations, if there are any features
+  # with 0.0 for their means and/or standard deviations, replace those values
+  # with 0.0001.
+  # Used https://stackoverflow.com/questions/9439619/replace-all-values-in-a-matrix-0-1-with-0
+  # as a reference.
+  mean_sd_matrix[mean_sd_matrix == 0.0] <- 0.0001
+  return(mean_sd_matrix)
 }
 
-mean_standard_dev(dataset=training_set)
+mean_sd_matrix <- mean_standard_dev(dataset=training_set)
