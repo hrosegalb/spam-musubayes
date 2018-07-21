@@ -69,4 +69,30 @@ mean_standard_dev <- function(dataset)
   return(mean_sd_matrix)
 }
 
+get_class_prediction <- function(dataset, mean_sd_matrix)
+{
+  num_samples <- nrow(dataset)
+  conditional_spam <- matrix(0, nrow = num_samples, ncol = 57)
+  conditional_non_spam <- matrix(0, nrow = num_samples, ncol = 57)
+  probability_matrix <- matrix(0, nrow = num_samples, ncol = 2)
+  
+  # Calculate the probability density function for each feature of each sample
+  # in dataset
+  for (i in 1:num_samples)
+  {
+    for (j in 1:57)
+    {
+      feature <- dataset[i, j]
+      spam_mu <- mean_sd_matrix[j, 1]
+      non_spam_mu <- mean_sd_matrix[j, 2]
+      spam_sigma <- mean_sd_matrix[j, 3]
+      non_spam_sigma <- mean_sd_matrix[j, 4]
+      
+      conditional_spam[i,j] <- (1/(sqrt(2*pi)*spam_sigma)) * exp(-(((feature - spam_mu)^2)/(2 * spam_sigma^2)))
+      conditional_non_spam[i,j] <- (1/(sqrt(2*pi)*non_spam_sigma)) * exp(-(((feature - non_spam_mu)^2)/(2 * non_spam_sigma^2)))
+    }
+  }
+  probabilities <- list(conditional_spam, conditional_non_spam)
+}
 mean_sd_matrix <- mean_standard_dev(dataset=training_set)
+probabilities <- get_class_prediction(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
