@@ -92,7 +92,18 @@ get_class_prediction <- function(dataset, mean_sd_matrix)
       conditional_non_spam[i,j] <- (1/(sqrt(2*pi)*non_spam_sigma)) * exp(-(((feature - non_spam_mu)^2)/(2 * non_spam_sigma^2)))
     }
   }
-  probabilities <- list(conditional_spam, conditional_non_spam)
+  
+  conditional_spam <- log10(conditional_spam)
+  conditional_non_spam <- log10(conditional_non_spam)
+  
+  probability_matrix[, 1] <- rowSums(conditional_non_spam)
+  probability_matrix[, 2] <- rowSums(conditional_spam)
+  probability_matrix[probability_matrix == '-Inf'] <- log10(.Machine$double.xmin)
+  
+  probability_matrix[, 1] <- probability_matrix[, 1] + log10(0.6)
+  probability_matrix[, 2] <- probability_matrix[, 2] + log10(0.4)
+  return(probability_matrix)
 }
+
 mean_sd_matrix <- mean_standard_dev(dataset=training_set)
-probabilities <- get_class_prediction(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
+probability_matrix <- get_class_prediction(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
