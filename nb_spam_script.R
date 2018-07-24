@@ -69,7 +69,7 @@ mean_standard_dev <- function(dataset)
   return(mean_sd_matrix)
 }
 
-get_class_prediction <- function(dataset, mean_sd_matrix)
+get_class_predictions <- function(dataset, mean_sd_matrix)
 {
   num_samples <- nrow(dataset)
   conditional_spam <- matrix(0, nrow = num_samples, ncol = 57)
@@ -105,5 +105,43 @@ get_class_prediction <- function(dataset, mean_sd_matrix)
   return(probability_matrix)
 }
 
+predict <- function(dataset, probability_matrix)
+{
+  # Takes a matrix of spam/non-spam probabilities of each data sample and the test dataset and 
+  # compares the prediction of each data sample in the probability_matrix with the target 
+  # in the test data. It then creates a confusion matrix where:
+  # confusion_matrix[1][1] = Actual is non-spam and Prediction is non-spam (TN)
+  # confusion_matrix[1][2] = Actual is non-spam and Prediction is spam (FP)
+  # confusion_matrix[2][1] = Actual is spam and Prediction is non-spam (FN)
+  # confusion_matrix[2][2] = Actual is spam and Prediction is spam (TP)
+  
+  confusion_matrix <- matrix(0, nrow = 2, ncol = 2)
+  num_samples <- nrow(probability_matrix)
+  
+  for (i in 1:num_samples)
+  {
+    predicted_class <- which.max(probability_matrix[i, ])
+    actual_class <- dataset[i, 58] + 1
+    confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
+  }
+  
+  return(confusion_matrix)
+}
+
+get_accuracy <- function(confusion_matrix)
+{
+  # Returns the accuracy percentage of a confusion matrix: 
+  # (TP+TN) / (TP+FP+FN+TN) * 100
+  
+  accuracy <- sum(diag(confusion_matrix))
+  accuracy <- accuracy / sum(confusion_matrix)
+  accuracy <- accuracy * 100
+  
+  print(confusion_matrix)
+  print(accuracy)
+}
+
 mean_sd_matrix <- mean_standard_dev(dataset=training_set)
-probability_matrix <- get_class_prediction(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
+probability_matrix <- get_class_predictions(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
+confusion_matrix <- predict(dataset = test_set, probability_matrix = probability_matrix)
+get_accuracy(confusion_matrix = confusion_matrix)
