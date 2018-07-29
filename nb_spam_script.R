@@ -10,27 +10,20 @@
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Read in spambase csv file and separate the resulting data frame into
-# spam and non-spam data frames.
-# Some code used here has been modified from
-# https://stackoverflow.com/questions/26341246/r-subset-of-matrix-based-on-cell-value-of-one-column
+
+PERCENT_TRAINING <- 0.6
+PERCENT_TESTING <- 0.4
+
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
-spam_df <- spambase[spambase[58] == 1, ]
-non_spam_df <- spambase[spambase[58] == 0, ]
 
-# Split spam_df and non_spam_df in half
-spam_rows <- nrow(spam_df)
-non_spam_rows <- nrow(non_spam_df)
-spam_1 <- spam_df[1:(spam_rows/2), ]
-spam_2 <- spam_df[(spam_rows/2):spam_rows+1, ]
-non_spam_1 <- non_spam_df[1:(non_spam_rows/2), ]
-non_spam_2 <- non_spam_df[(non_spam_rows/2):non_spam_rows, ]
+spambase <- spambase[sample(nrow(spambase)), ]
+num_rows <- nrow(spambase)
+num_training <- as.integer(PERCENT_TRAINING * num_rows)
 
-# Combine the two halves into a training set and test set
-training_set <- rbind(spam_1, non_spam_1)
-test_set <- rbind(spam_2, non_spam_2)
+training_set <- spambase[1:num_training, ]
+test_set <- spambase[(num_training + 1):num_rows, ]
 
 # Calculate mean and standard deviation of each feature in the training
 # dataset. Store the results in a matrix.
