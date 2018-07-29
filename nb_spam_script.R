@@ -12,14 +12,13 @@
 
 
 PERCENT_TRAINING <- 0.6
-PERCENT_TESTING <- 0.4
 
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
 
 spambase <- spambase[sample(nrow(spambase)), ]
-num_rows <- nrow(spambase)
+num_rows <- as.integer(nrow(spambase))
 num_training <- as.integer(PERCENT_TRAINING * num_rows)
 
 training_set <- spambase[1:num_training, ]
