@@ -92,8 +92,14 @@ get_class_predictions <- function(dataset, mean_sd_matrix)
   probability_matrix[, 2] <- rowSums(conditional_spam)
   probability_matrix[probability_matrix == '-Inf'] <- log10(.Machine$double.xmin)
   
-  probability_matrix[, 1] <- probability_matrix[, 1] + log10(0.6)
-  probability_matrix[, 2] <- probability_matrix[, 2] + log10(0.4)
+  num_rows <- nrow(dataset)
+  num_spam <- nrow(dataset[dataset[58] == 1, ])
+  num_non_spam <- nrow(dataset[dataset[58] == 0, ])
+  spam_prior <- num_spam / num_rows
+  non_spam_prior <- num_non_spam / num_rows
+  
+  probability_matrix[, 1] <- probability_matrix[, 1] + log10(spam_prior)
+  probability_matrix[, 2] <- probability_matrix[, 2] + log10(non_spam_prior)
   return(probability_matrix)
 }
 
