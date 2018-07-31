@@ -12,12 +12,18 @@
 
 
 PERCENT_TRAINING <- 0.6
+NUM_FOLDS <- 10
+
 
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
 
 spambase <- spambase[sample(nrow(spambase)), ]
+folds <- list()
+
+folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
+
 num_rows <- as.integer(nrow(spambase))
 num_training <- as.integer(PERCENT_TRAINING * num_rows)
 
