@@ -11,24 +11,11 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-PERCENT_TRAINING <- 0.6
-NUM_FOLDS <- 10
+#num_rows <- as.integer(nrow(spambase))
+#num_training <- as.integer(PERCENT_TRAINING * num_rows)
 
-
-spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
-spambase <- as.data.frame(spambase)
-names(spambase) <- c(1:58)
-
-spambase <- spambase[sample(nrow(spambase)), ]
-folds <- list()
-
-folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
-
-num_rows <- as.integer(nrow(spambase))
-num_training <- as.integer(PERCENT_TRAINING * num_rows)
-
-training_set <- spambase[1:num_training, ]
-test_set <- spambase[(num_training + 1):num_rows, ]
+#training_set <- spambase[1:num_training, ]
+#test_set <- spambase[(num_training + 1):num_rows, ]
 
 # Calculate mean and standard deviation of each feature in the training
 # dataset. Store the results in a matrix.
@@ -141,11 +128,50 @@ get_accuracy <- function(confusion_matrix)
   accuracy <- accuracy / sum(confusion_matrix)
   accuracy <- accuracy * 100
   
-  print(confusion_matrix)
-  print(accuracy)
+  #print(confusion_matrix)
+  return(accuracy)
 }
 
-mean_sd_matrix <- mean_standard_dev(dataset=training_set)
-probability_matrix <- get_class_predictions(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
-confusion_matrix <- predict(dataset = test_set, probability_matrix = probability_matrix)
-get_accuracy(confusion_matrix = confusion_matrix)
+PERCENT_TRAINING <- 0.6
+NUM_FOLDS <- 10
+
+
+spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
+spambase <- as.data.frame(spambase)
+names(spambase) <- c(1:58)
+
+spambase <- spambase[sample(nrow(spambase)), ]
+folds <- list()
+
+folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
+accuracy_list <- list()
+
+for (i in 1:NUM_FOLDS)
+{
+  test_set <- folds[[i]]
+  training_set <- matrix(, nrow = 0, ncol = 58)
+  for (j in 1:NUM_FOLDS)
+  {
+    if (j != i)
+    {
+      training_set <- rbind(training_set, folds[[j]])
+    }
+  }
+  mean_sd_matrix <- mean_standard_dev(dataset=training_set)
+  probability_matrix <- get_class_predictions(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
+  confusion_matrix <- predict(dataset = test_set, probability_matrix = probability_matrix)
+  accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
+  accuracy_list[[i]] <- accuracy
+}
+
+print("Percent Accurate from each fold:")
+print(accuracy_list)
+print("Average Accuracy (%):")
+print(mean(unlist(accuracy_list)))
+print("Max Accuracy (%):")
+print(max(unlist(accuracy_list)))
+print("Min Accuracy (%):")
+print(min(unlist(accuracy_list)))
+print("Standard Deviation:")
+print(sd(unlist(accuracy_list)))
+
