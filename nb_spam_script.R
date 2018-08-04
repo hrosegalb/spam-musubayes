@@ -11,12 +11,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-#num_rows <- as.integer(nrow(spambase))
-#num_training <- as.integer(PERCENT_TRAINING * num_rows)
-
-#training_set <- spambase[1:num_training, ]
-#test_set <- spambase[(num_training + 1):num_rows, ]
-
 # Calculate mean and standard deviation of each feature in the training
 # dataset. Store the results in a matrix.
 mean_standard_dev <- function(dataset)
@@ -132,9 +126,9 @@ get_accuracy <- function(confusion_matrix)
   return(accuracy)
 }
 
-PERCENT_TRAINING <- 0.6
 NUM_FOLDS <- 10
 
+set.seed(1)
 
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
