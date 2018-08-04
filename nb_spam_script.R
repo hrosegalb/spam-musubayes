@@ -10,27 +10,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Read in spambase csv file and separate the resulting data frame into
-# spam and non-spam data frames.
-# Some code used here has been modified from
-# https://stackoverflow.com/questions/26341246/r-subset-of-matrix-based-on-cell-value-of-one-column
-spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
-spambase <- as.data.frame(spambase)
-names(spambase) <- c(1:58)
-spam_df <- spambase[spambase[58] == 1, ]
-non_spam_df <- spambase[spambase[58] == 0, ]
-
-# Split spam_df and non_spam_df in half
-spam_rows <- nrow(spam_df)
-non_spam_rows <- nrow(non_spam_df)
-spam_1 <- spam_df[1:(spam_rows/2), ]
-spam_2 <- spam_df[(spam_rows/2):spam_rows+1, ]
-non_spam_1 <- non_spam_df[1:(non_spam_rows/2), ]
-non_spam_2 <- non_spam_df[(non_spam_rows/2):non_spam_rows, ]
-
-# Combine the two halves into a training set and test set
-training_set <- rbind(spam_1, non_spam_1)
-test_set <- rbind(spam_2, non_spam_2)
 
 # Calculate mean and standard deviation of each feature in the training
 # dataset. Store the results in a matrix.
@@ -100,8 +79,14 @@ get_class_predictions <- function(dataset, mean_sd_matrix)
   probability_matrix[, 2] <- rowSums(conditional_spam)
   probability_matrix[probability_matrix == '-Inf'] <- log10(.Machine$double.xmin)
   
-  probability_matrix[, 1] <- probability_matrix[, 1] + log10(0.6)
-  probability_matrix[, 2] <- probability_matrix[, 2] + log10(0.4)
+  num_rows <- nrow(dataset)
+  num_spam <- nrow(dataset[dataset[58] == 1, ])
+  num_non_spam <- nrow(dataset[dataset[58] == 0, ])
+  spam_prior <- num_spam / num_rows
+  non_spam_prior <- num_non_spam / num_rows
+  
+  probability_matrix[, 1] <- probability_matrix[, 1] + log10(spam_prior)
+  probability_matrix[, 2] <- probability_matrix[, 2] + log10(non_spam_prior)
   return(probability_matrix)
 }
 
@@ -137,11 +122,50 @@ get_accuracy <- function(confusion_matrix)
   accuracy <- accuracy / sum(confusion_matrix)
   accuracy <- accuracy * 100
   
-  print(confusion_matrix)
-  print(accuracy)
+  #print(confusion_matrix)
+  return(accuracy)
 }
 
-mean_sd_matrix <- mean_standard_dev(dataset=training_set)
-probability_matrix <- get_class_predictions(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
-confusion_matrix <- predict(dataset = test_set, probability_matrix = probability_matrix)
-get_accuracy(confusion_matrix = confusion_matrix)
+NUM_FOLDS <- 10
+
+set.seed(1)
+
+spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
+spambase <- as.data.frame(spambase)
+names(spambase) <- c(1:58)
+
+spambase <- spambase[sample(nrow(spambase)), ]
+folds <- list()
+
+folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
+accuracy_list <- list()
+
+for (i in 1:NUM_FOLDS)
+{
+  test_set <- folds[[i]]
+  training_set <- matrix(, nrow = 0, ncol = 58)
+  for (j in 1:NUM_FOLDS)
+  {
+    if (j != i)
+    {
+      training_set <- rbind(training_set, folds[[j]])
+    }
+  }
+  mean_sd_matrix <- mean_standard_dev(dataset=training_set)
+  probability_matrix <- get_class_predictions(dataset = test_set, mean_sd_matrix = mean_sd_matrix)
+  confusion_matrix <- predict(dataset = test_set, probability_matrix = probability_matrix)
+  accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
+  accuracy_list[[i]] <- accuracy
+}
+
+print("Percent Accurate from each fold:")
+print(accuracy_list)
+print("Average Accuracy (%):")
+print(mean(unlist(accuracy_list)))
+print("Max Accuracy (%):")
+print(max(unlist(accuracy_list)))
+print("Min Accuracy (%):")
+print(min(unlist(accuracy_list)))
+print("Standard Deviation:")
+print(sd(unlist(accuracy_list)))
+
