@@ -96,4 +96,97 @@ get_feature_probabilities <- function(dataset)
   return(mean_matrix)
 }
 
-mean_matrix <- get_feature_probabilities(training_set)
+naive_bayes <- function(dataset, mean_matrix)
+{
+  # mean_matrix[1, j] = P(x_j = 0 | 0) => P(x_j = 0 | ham)
+  # mean_matrix[2, j] = P(x_j = 1 | 0) => P(x_j = 1 | ham)
+  # mean_matrix[3, j] = P(x_j = 0 | 1) => P(x_j = 0 | spam)
+  # mean_matrix[4, j] = P(x_j = 1 | 1) => P(x_j = 1 | spam)
+  
+  # results_matrix[i, 1] = spam prediction for sample i
+  # results_matrix[i, 2] = non-spam prediction for sample i
+  
+  total_rows <- nrow(dataset)
+  total_cols <- ncol(dataset)
+  results_matrix <- matrix(0, nrow = total_rows, ncol = 2)
+  
+  spam_prior <- length(which(dataset[, total_cols] == 1))
+  spam_prior <- spam_prior / total_rows
+  spam_prior <- log10(spam_prior)
+  
+  ham_prior <- length(which(dataset[, total_cols] == 0))
+  ham_prior <- ham_prior / total_rows
+  ham_prior <- log10(ham_prior)
+  
+  mean_matrix <- log10(mean_matrix)
+  
+  for (i in 1:total_rows)
+  {
+    spam_prediction = spam_prior
+    ham_prediction = ham_prior
+    for (j in 1:(total_cols - 1))
+    {
+      feature <- dataset[i, j]
+      if (feature == 1)
+      {
+        spam_prediction <- spam_prediction + mean_matrix[4, j]
+        ham_prediction <- ham_prediction + mean_matrix[2, j]
+      }
+      else
+      {
+        spam_prediction <- spam_prediction + mean_matrix[3, j]
+        ham_prediction <- ham_prediction + mean_matrix[1, j]
+      }
+      
+      if (j == (total_cols - 1))
+      {
+        results_matrix[i, 1] <- spam_prediction
+        results_matrix[i, 2] <- ham_prediction
+      }
+    }
+  }
+  return(results_matrix)
+}
+
+predict <- function(dataset, results_matrix)
+{
+  # Takes a matrix of spam/non-spam probabilities of each data sample and the test dataset and 
+  # compares the prediction of each data sample in the probability_matrix with the target 
+  # in the test data. It then creates a confusion matrix where:
+  # confusion_matrix[1][1] = Actual is non-spam and Prediction is non-spam (TN)
+  # confusion_matrix[1][2] = Actual is non-spam and Prediction is spam (FP)
+  # confusion_matrix[2][1] = Actual is spam and Prediction is non-spam (FN)
+  # confusion_matrix[2][2] = Actual is spam and Prediction is spam (TP)
+  
+  confusion_matrix <- matrix(0, nrow = 2, ncol = 2)
+  num_samples <- nrow(results_matrix)
+  num_col <- ncol(dataset)
+  
+  for (i in 1:num_samples)
+  {
+    predicted_class <- which.max(results_matrix[i, ])
+    actual_class <- dataset[i, num_col] + 1
+    confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
+  }
+  
+  return(confusion_matrix)
+}
+
+get_accuracy <- function(confusion_matrix)
+{
+  # Returns the accuracy percentage of a confusion matrix: 
+  # (TP+TN) / (TP+FP+FN+TN) * 100
+  
+  accuracy <- sum(diag(confusion_matrix))
+  accuracy <- accuracy / sum(confusion_matrix)
+  accuracy <- accuracy * 100
+  
+  print(confusion_matrix)
+  print(accuracy)
+  return(accuracy)
+}
+
+mean_matrix <- get_feature_probabilities(dataset = training_set)
+results_matrix <- naive_bayes(dataset = test_set, mean_matrix = mean_matrix)
+accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
+confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
