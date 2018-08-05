@@ -197,22 +197,27 @@ get_accuracy <- function(confusion_matrix)
 
 NUM_FOLDS <- 10
 
-set.seed(1)
+set.seed(1)     # Set a seed so that results are reproducible
 
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
 
-spambase <- spambase[sample(nrow(spambase)), ]
+spambase <- spambase[sample(nrow(spambase)), ]    # Shuffle dataset
+
+# Remove rows 55-57 (which don't calculate frequency of a word in an email)
+# and convert the remaining values from real numbers to 1s and 0s
 bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values)
-bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58])
+bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58]) 
 bernoulli_spambase <- as.data.frame(bernoulli_spambase)
 
+# Perform K-fold cross-validation on dataset
 folds <- list()
 
 folds <- split(bernoulli_spambase, sample(1:NUM_FOLDS, nrow(bernoulli_spambase), replace = T))
 accuracy_list <- list()
 
+print("Confusion Matrices for each fold:")
 for (i in 1:NUM_FOLDS)
 {
   test_set <- folds[[i]]

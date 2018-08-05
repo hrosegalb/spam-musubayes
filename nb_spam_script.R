@@ -141,27 +141,29 @@ get_accuracy <- function(confusion_matrix)
   accuracy <- sum(diag(confusion_matrix))
   accuracy <- accuracy / sum(confusion_matrix)
   accuracy <- accuracy * 100
-  
-  #print(confusion_matrix)
+
   return(accuracy)
 }
 
 
-# Perform K-fold cross-validation on dataset
+
 NUM_FOLDS <- 10
 
-set.seed(1)
+set.seed(1)       # Set a seed so that results are reproducible
 
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
 
-spambase <- spambase[sample(nrow(spambase)), ]
+spambase <- spambase[sample(nrow(spambase)), ]  # Shuffle dataset
+
+# Perform K-fold cross-validation on dataset
 folds <- list()
 
 folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
 accuracy_list <- list()
 
+print("Confusion Matrices for each fold:")
 for (i in 1:NUM_FOLDS)
 {
   test_set <- folds[[i]]
