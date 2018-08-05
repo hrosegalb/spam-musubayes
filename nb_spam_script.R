@@ -11,33 +11,35 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-# Calculate mean and standard deviation of each feature in the training
-# dataset. Store the results in a matrix.
+
 mean_standard_dev <- function(dataset)
 {
+  # Calculate mean and standard deviation of each feature in the training
+  # dataset. Store the results in a matrix.
   # mean_sd_matrix[i][1] = mean for that feature given that it's spam
   # mean_sd_matrix[i][2] = mean for that feature given that it's not spam
   # mean_sd_matrix[i][3] = standard deviation for that feature given that it's spam
   # mean_sd_matrix[i][4] = standard deviation for that feature given that it's not spam
   
   # Create an empty matrix to put feature means/standard deviations in
-  mean_sd_matrix <- matrix(0, nrow = 57, ncol = 4)
+  num_col <- ncol(dataset)
+  mean_sd_matrix <- matrix(0, nrow = (num_col - 1), ncol = 4)
   
   # Loop through each column of the dataset and calculate the mean and
   # standard deviations of each feature given that it's spam/not spam.
   # Place the results in the corresponding columns of 'mean_sd_matrix'.
   # Used https://stackoverflow.com/questions/1660124/how-to-sum-a-variable-by-group#1661144
   # as a reference.
-  i <- 1:57
-  means <- aggregate(dataset[, i], by=list(dataset[, 58]), FUN=mean)
+  i <- 1:(num_col-1)
+  means <- aggregate(dataset[, i], by=list(dataset[, num_col]), FUN=mean)
   means <- as.matrix(means)
-  standard_devs <- aggregate(dataset[, i], by=list(dataset[, 58]), FUN=sd)
+  standard_devs <- aggregate(dataset[, i], by=list(dataset[, num_col]), FUN=sd)
   standard_devs <- as.matrix(standard_devs)
   
-  mean_sd_matrix[, 1] <- means[2, (2:58)]
-  mean_sd_matrix[, 2] <- means[1, (2:58)]
-  mean_sd_matrix[, 3] <- standard_devs[2, (2:58)]
-  mean_sd_matrix[, 4] <- standard_devs[1, (2:58)]
+  mean_sd_matrix[, 1] <- means[2, (2:num_col)]
+  mean_sd_matrix[, 2] <- means[1, (2:num_col)]
+  mean_sd_matrix[, 3] <- standard_devs[2, (2:num_col)]
+  mean_sd_matrix[, 4] <- standard_devs[1, (2:num_col)]
   
   # So as to not mess up future calculations, if there are any features
   # with 0.0 for their means and/or standard deviations, replace those values
@@ -50,16 +52,24 @@ mean_standard_dev <- function(dataset)
 
 get_class_predictions <- function(dataset, mean_sd_matrix)
 {
+  # Creates a matrix of probabilities where each row represents a data sample.
+  # Each column represents:
+  # probability_matrix[i, 1] = probability of that data sample being spam
+  # probability_matrix[i, 2] = probability of that data sample not being spam
+  
   num_samples <- nrow(dataset)
-  conditional_spam <- matrix(0, nrow = num_samples, ncol = 57)
-  conditional_non_spam <- matrix(0, nrow = num_samples, ncol = 57)
+  num_cols <- ncol(dataset)
+  
+  # Stores the results of the PDF on each feature for each sample, given that the sample is spam/not spam
+  conditional_spam <- matrix(0, nrow = num_samples, ncol = (num_cols - 1))
+  conditional_non_spam <- matrix(0, nrow = num_samples, ncol = (num_cols - 1))
+  
   probability_matrix <- matrix(0, nrow = num_samples, ncol = 2)
   
-  # Calculate the probability density function for each feature of each sample
-  # in dataset
+  # Calculate the probability density function (PDF) for each feature of each sample in dataset.
   for (i in 1:num_samples)
   {
-    for (j in 1:57)
+    for (j in 1:(num_cols - 1))
     {
       feature <- dataset[i, j]
       spam_mu <- mean_sd_matrix[j, 1]
@@ -72,19 +82,27 @@ get_class_predictions <- function(dataset, mean_sd_matrix)
     }
   }
   
+  
+  # Convert every PDF result to its log in order to add the values of each feature rather than multiply.
+  # This will help avoid buffer overflow.
   conditional_spam <- log10(conditional_spam)
   conditional_non_spam <- log10(conditional_non_spam)
   
+  
+  # Sum the PDF results for each sample and store sum in probability_matrix
   probability_matrix[, 1] <- rowSums(conditional_non_spam)
   probability_matrix[, 2] <- rowSums(conditional_spam)
-  probability_matrix[probability_matrix == '-Inf'] <- log10(.Machine$double.xmin)
+  probability_matrix[probability_matrix == '-Inf'] <- log10(.Machine$double.xmin) # Corrects buffer overflow
   
-  num_rows <- nrow(dataset)
-  num_spam <- nrow(dataset[dataset[58] == 1, ])
-  num_non_spam <- nrow(dataset[dataset[58] == 0, ])
-  spam_prior <- num_spam / num_rows
-  non_spam_prior <- num_non_spam / num_rows
   
+  # Calculate the spam & non-spam priors
+  num_spam <- length(which(dataset[, num_cols] == 1))
+  num_non_spam <- length(which(dataset[, num_cols] == 0))
+  spam_prior <- num_spam / num_samples
+  non_spam_prior <- num_non_spam / num_samples
+  
+  
+  # Take the log of the spam & non-spam priors and add it to their corresponding log sums
   probability_matrix[, 1] <- probability_matrix[, 1] + log10(spam_prior)
   probability_matrix[, 2] <- probability_matrix[, 2] + log10(non_spam_prior)
   return(probability_matrix)
@@ -102,11 +120,12 @@ predict <- function(dataset, probability_matrix)
   
   confusion_matrix <- matrix(0, nrow = 2, ncol = 2)
   num_samples <- nrow(probability_matrix)
+  max_col <- ncol(dataset)
   
   for (i in 1:num_samples)
   {
     predicted_class <- which.max(probability_matrix[i, ])
-    actual_class <- dataset[i, 58] + 1
+    actual_class <- dataset[i, max_col] + 1
     confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
   }
   
@@ -126,6 +145,8 @@ get_accuracy <- function(confusion_matrix)
   return(accuracy)
 }
 
+
+# Perform K-fold cross-validation on dataset
 NUM_FOLDS <- 10
 
 set.seed(1)
