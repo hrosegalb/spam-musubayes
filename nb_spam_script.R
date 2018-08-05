@@ -129,6 +129,7 @@ predict <- function(dataset, probability_matrix)
     confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
   }
   
+  print(confusion_matrix)
   return(confusion_matrix)
 }
 
