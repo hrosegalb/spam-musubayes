@@ -17,6 +17,7 @@
 
 convert_values <- function(x)
 {
+  # Function converts real number value to a 1.
   if (x > 0.0)
   {
     x = 1
@@ -24,24 +25,26 @@ convert_values <- function(x)
   return(x)
 }
 
-get_feature_probabilities <- function(dataset)
+get_conditional_probabilities <- function(dataset)
 {
-  # mean_matrix[1, j] = P(x_j = 0 | 0) => P(x_j = 0 | ham)
-  # mean_matrix[2, j] = P(x_j = 1 | 0) => P(x_j = 1 | ham)
-  # mean_matrix[3, j] = P(x_j = 0 | 1) => P(x_j = 0 | spam)
-  # mean_matrix[4, j] = P(x_j = 1 | 1) => P(x_j = 1 | spam)
+  # Calculates conditional probability for each feature in the training dataset and stores results in mean_matrix.
+  # mean_matrix[1, j] = P(x_j = 0 | 0) => "Probability that the feature equals 0, given that the outcome is ham"
+  # mean_matrix[2, j] = P(x_j = 1 | 0) => "Probability that the feature equals 1, given that the outcome is ham"
+  # mean_matrix[3, j] = P(x_j = 0 | 1) => "Probability that the feature equals 0, given that the outcome is spam"
+  # mean_matrix[4, j] = P(x_j = 1 | 1) => "Probability that the feature equals 1, given that the outcome is spam"
   
   num_total_rows <- nrow(dataset)
   num_total_cols <- ncol(dataset)
-  print(num_total_cols)
-  mean_matrix <- matrix(0, nrow = 4, ncol = 54)
+  mean_matrix <- matrix(0, nrow = 4, ncol = (num_total_cols - 1))
   
+  # Get total number of spam samples and total number of non-spam samples
   num_spam <- length(which(dataset[, num_total_cols] == 1))
   num_spam <- num_spam + 2                                # Adding 2 to sum_spam as part of Laplace smoothing
   
   num_non_spam <- length(which(dataset[, num_total_cols] == 0))
   num_non_spam <- num_non_spam + 2                        # Adding 2 to sum_non_spam as part of Laplace smoothing
   
+  # Get conditional probabilities for each feature
   for (j in 1:(num_total_cols - 1))
   {
     sum_ones_given_ham <- 0
@@ -76,17 +79,19 @@ get_feature_probabilities <- function(dataset)
       
       if (i == num_total_rows)
       {
-        # Adding 1 to each sum as part of Laplace smoothing
+        # Add 1 to each sum as part of Laplace smoothing
         sum_ones_given_spam <- sum_ones_given_spam + 1
         sum_zeros_given_spam <- sum_zeros_given_spam + 1
         sum_ones_given_ham <- sum_ones_given_ham + 1
         sum_zeros_given_ham <- sum_zeros_given_ham + 1
         
+        # Get the conditional probabilities
         ones_given_spam_avg <- sum_ones_given_spam / num_spam
         zeros_given_spam_avg <- sum_zeros_given_spam / num_spam
         ones_given_ham_avg <- sum_ones_given_ham / num_non_spam
         zeros_given_ham_avg <- sum_zeros_given_ham / num_non_spam
         
+        # Store conditional probabilities for this feature in mean_matrix
         mean_matrix[1, j] <- zeros_given_ham_avg
         mean_matrix[2, j] <- ones_given_ham_avg
         mean_matrix[3, j] <- zeros_given_spam_avg
@@ -97,22 +102,18 @@ get_feature_probabilities <- function(dataset)
   return(mean_matrix)
 }
 
-naive_bayes <- function(dataset, mean_matrix)
+get_class_predictions <- function(dataset, mean_matrix)
 {
-  # mean_matrix[1, j] = P(x_j = 0 | 0) => P(x_j = 0 | ham)
-  # mean_matrix[2, j] = P(x_j = 1 | 0) => P(x_j = 1 | ham)
-  # mean_matrix[3, j] = P(x_j = 0 | 1) => P(x_j = 0 | spam)
-  # mean_matrix[4, j] = P(x_j = 1 | 1) => P(x_j = 1 | spam)
-  
-  # results_matrix[i, 1] = spam prediction for sample i
-  # results_matrix[i, 2] = non-spam prediction for sample i
+  # Creates a matrix of probabilities where each row represents a data sample.
+  # Each column represents:
+  # results_matrix[i, 1] = probability of that data sample being spam
+  # results_matrix[i, 2] = probability of that data sample not being spam
   
   total_rows <- nrow(dataset)
-  print("Total rows:")
-  print(total_rows)
   total_cols <- ncol(dataset)
   results_matrix <- matrix(0, nrow = total_rows, ncol = 2)
   
+  # Calculate spam & non-spam priors and then take the log of the values
   spam_prior <- length(which(dataset[, total_cols] == 1))
   spam_prior <- spam_prior / total_rows
   spam_prior <- log10(spam_prior)
@@ -121,30 +122,33 @@ naive_bayes <- function(dataset, mean_matrix)
   ham_prior <- ham_prior / total_rows
   ham_prior <- log10(ham_prior)
   
+  # Take the logs of all conditional probabilities in order to add the values of each feature rather than multiply.
+  # This will help avoid buffer overflow. 
   mean_matrix <- log10(mean_matrix)
   
+  # Calculate the probability of each sample being spam or not and store the probabalities in results_matrix
   for (i in 1:total_rows)
   {
-    spam_prediction = spam_prior
-    ham_prediction = ham_prior
+    spam_probability = spam_prior
+    ham_probability = ham_prior
     for (j in 1:(total_cols - 1))
     {
       feature <- dataset[i, j]
       if (feature == 1)
       {
-        spam_prediction <- spam_prediction + mean_matrix[4, j]
-        ham_prediction <- ham_prediction + mean_matrix[2, j]
+        spam_probability <- spam_probability + mean_matrix[4, j]
+        ham_probability <- ham_probability + mean_matrix[2, j]
       }
       else
       {
-        spam_prediction <- spam_prediction + mean_matrix[3, j]
-        ham_prediction <- ham_prediction + mean_matrix[1, j]
+        spam_probability <- spam_probability + mean_matrix[3, j]
+        ham_probability <- ham_probability + mean_matrix[1, j]
       }
       
       if (j == (total_cols - 1))
       {
-        results_matrix[i, 1] <- spam_prediction
-        results_matrix[i, 2] <- ham_prediction
+        results_matrix[i, 1] <- spam_probability
+        results_matrix[i, 2] <- ham_probability
       }
     }
   }
@@ -220,8 +224,8 @@ for (i in 1:NUM_FOLDS)
       training_set <- rbind(training_set, folds[[j]])
     }
   }
-  mean_matrix <- get_feature_probabilities(dataset = training_set)
-  results_matrix <- naive_bayes(dataset = test_set, mean_matrix = mean_matrix)
+  mean_matrix <- get_conditional_probabilities(dataset = training_set)
+  results_matrix <- get_class_predictions(dataset = test_set, mean_matrix = mean_matrix)
   confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
   accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
   accuracy_list[[i]] <- accuracy
