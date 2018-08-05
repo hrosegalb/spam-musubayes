@@ -1,19 +1,19 @@
-PERCENT_TRAINING <- 0.6
+# Copyright (c) 2018 Hannah Galbraith
 
-spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
-spambase <- as.data.frame(spambase)
-names(spambase) <- c(1:58)
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, 
+# including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+# subject to the following conditions:
 
-spambase <- spambase[sample(nrow(spambase)), ]
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values)
-bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58])
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-num_rows <- as.integer(nrow(bernoulli_spambase))
-num_training <- as.integer(PERCENT_TRAINING * num_rows)
 
-training_set <- bernoulli_spambase[1:num_training, ]
-test_set <- bernoulli_spambase[(num_training + 1):num_rows, ]
+# Calculate mean and standard deviation of each feature in the training
+# dataset. Store the results in a matrix.
+
 
 convert_values <- function(x)
 {
@@ -33,6 +33,7 @@ get_feature_probabilities <- function(dataset)
   
   num_total_rows <- nrow(dataset)
   num_total_cols <- ncol(dataset)
+  print(num_total_cols)
   mean_matrix <- matrix(0, nrow = 4, ncol = 54)
   
   num_spam <- length(which(dataset[, num_total_cols] == 1))
@@ -107,6 +108,8 @@ naive_bayes <- function(dataset, mean_matrix)
   # results_matrix[i, 2] = non-spam prediction for sample i
   
   total_rows <- nrow(dataset)
+  print("Total rows:")
+  print(total_rows)
   total_cols <- ncol(dataset)
   results_matrix <- matrix(0, nrow = total_rows, ncol = 2)
   
@@ -164,7 +167,8 @@ predict <- function(dataset, results_matrix)
   
   for (i in 1:num_samples)
   {
-    predicted_class <- which.max(results_matrix[i, ])
+    predicted_class <- which.min(results_matrix[i, ])
+    #predicted_class <- which.max(results_matrix[i, ])
     actual_class <- dataset[i, num_col] + 1
     confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
   }
@@ -182,11 +186,54 @@ get_accuracy <- function(confusion_matrix)
   accuracy <- accuracy * 100
   
   print(confusion_matrix)
-  print(accuracy)
   return(accuracy)
 }
 
-mean_matrix <- get_feature_probabilities(dataset = training_set)
-results_matrix <- naive_bayes(dataset = test_set, mean_matrix = mean_matrix)
-accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
-confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
+
+
+NUM_FOLDS <- 10
+
+set.seed(1)
+
+spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
+spambase <- as.data.frame(spambase)
+names(spambase) <- c(1:58)
+
+spambase <- spambase[sample(nrow(spambase)), ]
+bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values)
+bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58])
+bernoulli_spambase <- as.data.frame(bernoulli_spambase)
+
+folds <- list()
+
+folds <- split(bernoulli_spambase, sample(1:NUM_FOLDS, nrow(bernoulli_spambase), replace = T))
+accuracy_list <- list()
+
+for (i in 1:NUM_FOLDS)
+{
+  test_set <- folds[[i]]
+  training_set <- matrix(, nrow = 0, ncol = 55)
+  for (j in 1:NUM_FOLDS)
+  {
+    if (j != i)
+    {
+      training_set <- rbind(training_set, folds[[j]])
+    }
+  }
+  mean_matrix <- get_feature_probabilities(dataset = training_set)
+  results_matrix <- naive_bayes(dataset = test_set, mean_matrix = mean_matrix)
+  confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
+  accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
+  accuracy_list[[i]] <- accuracy
+}
+
+print("Percent Accurate from each fold:")
+print(accuracy_list)
+print("Average Accuracy (%):")
+print(mean(unlist(accuracy_list)))
+print("Max Accuracy (%):")
+print(max(unlist(accuracy_list)))
+print("Min Accuracy (%):")
+print(min(unlist(accuracy_list)))
+print("Standard Deviation:")
+print(sd(unlist(accuracy_list)))
