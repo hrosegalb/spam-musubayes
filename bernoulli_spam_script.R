@@ -231,7 +231,7 @@ for (i in 1:NUM_FOLDS)
   accuracy_list[[i]] <- accuracy
 }
 
-print("Percent Accurate from each fold:")
+print("Accuracy of each fold (%):")
 print(accuracy_list)
 print("Average Accuracy (%):")
 print(mean(unlist(accuracy_list)))
