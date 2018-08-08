@@ -21,13 +21,6 @@ To see the specific words and and characters the researchers used, visit https:/
 # Program Info
 There are two models a user can choose from for prediction: a Gaussian Naïve Bayes model or a Multivariate Bernoulli Naïve Bayes model. The Gaussian model uses the entire dataset and assumes the values associated with each class are distributed according to the Gaussian, or Normal, Distribution. The program uses K-fold cross-validation (with a default of K=10 folds) to split the data set into training and test sets. Using the training set, the program segments the data by class and then gets the means and standard deviations of each feature for both classes. Then, on the test set, it predicts the probability P(x<sub>i</sub> | 0) and P(x<sub>i</sub> | 1) for each feature of each sample by using the Gaussian equation, with each feature's respective mean and standard deviation for the given class substituted in for mu and sigma. To predict whether a sample is spam or not, it adds the logs of each of the sample's features' conditional probabilities to the log of the prior for both classes. The model predicts whichever class corresponds to the larger value of the two. The program prints out a confusion matrix for each fold as well as the accuracy percentage of each prediction. It then prints the average accuracy percentage across all folds, as well as the max accuracy, min accuracy, and standard deviation.
 
-Confusion matrix:           Key:
-----------------------      TN = True Negative
-|    TN    |   FP    |      FP = False Positive
-----------------------      FN = False Negative
-|    FN    |   TP    |      TP = True Positive
-----------------------      ********************
-
 # License
 Copyright 2018 Hannah Galbraith
 
