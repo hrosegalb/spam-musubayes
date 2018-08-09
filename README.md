@@ -18,8 +18,19 @@ The 58th column in the dataset stores a nominal {0,1} class attribute of type `s
 
 To see the specific words and and characters the researchers used, visit https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names.
 
-# Program Info
-There are two models a user can choose from for prediction: a Gaussian Naïve Bayes model or a Multivariate Bernoulli Naïve Bayes model. The Gaussian model uses the entire dataset and assumes the values associated with each class are distributed according to the Gaussian, or Normal, Distribution. The program uses K-fold cross-validation (with a default of K=10 folds) to split the data set into training and test sets. Using the training set, the program segments the data by class and then gets the means and standard deviations of each feature for both classes. Then, on the test set, it predicts the probability P(x<sub>i</sub> | 0) and P(x<sub>i</sub> | 1) for each feature of each sample by using the Gaussian equation, with each feature's respective mean and standard deviation for the given class substituted in for mu and sigma. To predict whether a sample is spam or not, it adds the logs of each of the sample's features' conditional probabilities to the log of the prior for both classes. The model predicts whichever class corresponds to the larger value of the two. The program prints out a confusion matrix for each fold as well as the accuracy percentage of each prediction. It then prints the average accuracy percentage across all folds, as well as the max accuracy, min accuracy, and standard deviation.
+# Program Information
+There are two models a user can choose from for prediction: a Gaussian Naïve Bayes model (`nb_spam_script.R`) or a Multivariate Bernoulli Naïve Bayes model (`bernoulli_spam_script.R`). The Gaussian model uses the entire dataset and assumes the values associated with each class, because they are continuous, are distributed according to the Gaussian, or Normal, Distribution. The program uses K-fold cross-validation (with a default of K=10 folds) to split the data set into training and test sets. Using the training set, the program segments the data by class and then gets the means and standard deviations of each feature for both classes. Then, on the test set, it predicts the probability P(x<sub>i</sub> | 0) and P(x<sub>i</sub> | 1) for each feature of each sample by using the Gaussian function (https://en.wikipedia.org/wiki/Gaussian_function), with each feature's respective mean and standard deviation for the given class substituted in for mu and sigma. To predict whether a sample is spam or not, it adds the logs of each of the samples' features' conditional probabilities to the log of the prior for both classes. The model predicts whichever class corresponds to the larger value of the two. The program prints out a confusion matrix of the predictions for each fold as well as the accuracy percentage of each prediction. It then prints the average accuracy percentage across all folds, as well as the max accuracy, min accuracy, and standard deviation.
+
+The Bernoulli model checks only for the presence or absence of a particular word or character in a sample. Thus, it eliminates columns 55-57 because they all relate to the lengths of capitol letter sequences in an email. It then converts the remaining features into '1's if the feature's value is greater than 0 and leaves any existing zeros as '0'. The program also uses K-fold cross-validation (with a default of K=10 folds) to split the data set into training and test sets. Using the training set, the program segments the data by class and determines the probabilities P(x<sub>i</sub> = 0 | 0), P(x<sub>i</sub> = 1 | 0), P(x<sub>i</sub> = 0 | 1), and P(x<sub>i</sub> = 1 | 1). To predict whether a sample is spam or not, it adds the logs of each of the samples' features' conditional probabilities to the log of the prior for both classes. The model predicts whichever class corresponds to the larger value of the two. The program prints out a confusion matrix of the predictions for each fold as well as the accuracy percentage of each prediction. It then prints the average accuracy percentage across all folds, as well as the max accuracy, min accuracy, and standard deviation.
+
+# Setup
+* Make sure you have R version 3.5.0 (2018-04-23) ("Joy in Playing") or higher installed: https://www.r-project.org/
+* Though not strictly necessary to run the program, if you'd like to use RStudio, make sure you have RStudio Desktop Version 1.1 or higher installed: https://www.rstudio.com/products/rstudio/download/#download
+
+# Installation and Build
+* Clone the repository into a directory you wish to work in
+* If using RStudio, make sure RStudio's built-in console and terminal are pointing towards the correct directory (in the console, `getwd()` and `setwd('path/to/folder')` are used to get the working directory and set the working directory, respectively).
+* Select the script you would like to run and run it! In RStudio, that can be done by opening the file and clicking "Source". From the terminal, that can be done by typing `Rscript <file_name>.R`.
 
 # License
 Copyright 2018 Hannah Galbraith
@@ -29,9 +40,5 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-# Setup
-* Make sure you have R version 3.5.0 (2018-04-23) ("Joy in Playing") or higher installed: https://www.r-project.org/
-* Though not strictly necessary to run the program, if you'd like to use RStudio, make sure you have RStudio Desktop Version 1.1 or higher installed: https://www.rstudio.com/products/rstudio/download/#download
 
 
