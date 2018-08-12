@@ -46,6 +46,7 @@ get_conditional_probabilities <- function(dataset)
   mean_matrix <- matrix(0, nrow = 4, ncol = (num_total_cols - 1))
   
   # Get total number of spam samples and total number of non-spam samples
+  # Used https://www.theanalysisfactor.com/r-tutorial-count/ as a reference
   num_spam <- length(which(dataset[, num_total_cols] == 1))
   num_spam <- num_spam + 2                                # Adding 2 to sum_spam as part of Laplace smoothing
   
@@ -208,8 +209,10 @@ set.seed(1)     # Set a seed so that results are reproducible
 spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
-  
-spambase <- spambase[sample(nrow(spambase)), ]    # Shuffle dataset
+ 
+# Randomize the rows in the dataset.
+# Used https://discuss.analyticsvidhya.com/t/how-to-shuffle-rows-in-a-data-frame-in-r/2202 as a reference. 
+spambase <- spambase[sample(nrow(spambase)), ]
   
 # Remove rows 55-57 (which don't have to do with frequency of a word in an email)
 # and convert the remaining values from real numbers to 1s and 0s
@@ -220,8 +223,11 @@ bernoulli_spambase <- as.data.frame(bernoulli_spambase)
 # Perform K-fold cross-validation on dataset
 folds <- list()
   
+# Split the dataset into a list of data frames where each data frame consists of randomly selected rows from the
+# dataset.
+# Used https://stats.stackexchange.com/questions/149250/split-data-into-n-equal-groups as a reference
 folds <- split(bernoulli_spambase, sample(1:NUM_FOLDS, nrow(bernoulli_spambase), replace = T))
-accuracy_list <- list()
+accuracy_list <- list()   # Stores the accuracy from each fold
   
 print("Confusion Matrices for each fold:")
 print("TN   |   FP")

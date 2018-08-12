@@ -66,7 +66,7 @@ get_class_predictions <- function(dataset, mean_sd_matrix)
   
   probability_matrix <- matrix(0, nrow = num_samples, ncol = 2)
   
-  # Calculate the probability density function (PDF) for each feature of each sample in dataset.
+  # Calculate the probability density function (PDF) [Gaussian Function] for each feature of each sample in dataset.
   for (i in 1:num_samples)
   {
     for (j in 1:(num_cols - 1))
@@ -96,6 +96,7 @@ get_class_predictions <- function(dataset, mean_sd_matrix)
   
   
   # Calculate the spam & non-spam priors
+  # Used https://www.theanalysisfactor.com/r-tutorial-count/ as a reference
   num_spam <- length(which(dataset[, num_cols] == 1))
   num_non_spam <- length(which(dataset[, num_cols] == 0))
   spam_prior <- num_spam / num_samples
@@ -156,13 +157,18 @@ spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
 spambase <- as.data.frame(spambase)
 names(spambase) <- c(1:58)
 
-spambase <- spambase[sample(nrow(spambase)), ]  # Shuffle dataset
+# Randomize the rows in the dataset.
+# Used https://discuss.analyticsvidhya.com/t/how-to-shuffle-rows-in-a-data-frame-in-r/2202 as a reference.
+spambase <- spambase[sample(nrow(spambase)), ]
 
 # Perform K-fold cross-validation on dataset
 folds <- list()
 
+# Split the dataset into a list of data frames where each data frame consists of randomly selected rows from the
+# dataset.
+# Used https://stats.stackexchange.com/questions/149250/split-data-into-n-equal-groups as a reference
 folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
-accuracy_list <- list()
+accuracy_list <- list() # Stores the accuracy from each fold
 
 print("Confusion Matrices for each fold:")
 print("TN   |   FP")
