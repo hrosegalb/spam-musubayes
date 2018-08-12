@@ -130,6 +130,7 @@ predict <- function(dataset, probability_matrix)
   }
   
   print(confusion_matrix)
+  print("***************")
   return(confusion_matrix)
 }
 
@@ -164,6 +165,9 @@ folds <- split(spambase, sample(1:NUM_FOLDS, nrow(spambase), replace = T))
 accuracy_list <- list()
 
 print("Confusion Matrices for each fold:")
+print("TN   |   FP")
+print("-----|-----")
+print("FN   |   TP")
 for (i in 1:NUM_FOLDS)
 {
   test_set <- folds[[i]]
