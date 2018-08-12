@@ -15,12 +15,20 @@
 # dataset. Store the results in a matrix.
 
 
-convert_values <- function(x)
+convert_values <- function(x, num)
 {
+  threshold <- 4.1    # This number was obtained after experimenting with an extensive range of thresholds.
+                      # As of 8/11/18, 4.1 is the threshold which allows the model to obtain the highest 
+                      # average percentage of accuracy (~36%) without uniformly predicting 'spam' for each sample.
+  
   # Function converts real number value to a 1.
-  if (x > 0.0)
+  if (x >= threshold)
   {
     x = 1
+  }
+  else
+  {
+    x = 0
   }
   return(x)
 }
@@ -171,8 +179,7 @@ predict <- function(dataset, results_matrix)
   
   for (i in 1:num_samples)
   {
-    predicted_class <- which.min(results_matrix[i, ])
-    #predicted_class <- which.max(results_matrix[i, ])
+    predicted_class <- which.max(results_matrix[i, ])
     actual_class <- dataset[i, num_col] + 1
     confusion_matrix[actual_class, predicted_class] <- confusion_matrix[actual_class, predicted_class] + 1
   }
@@ -190,59 +197,78 @@ get_accuracy <- function(confusion_matrix)
   accuracy <- accuracy * 100
   
   print(confusion_matrix)
+  print("***************")
   return(accuracy)
 }
 
-
-
-NUM_FOLDS <- 10
-
-set.seed(1)     # Set a seed so that results are reproducible
-
-spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
-spambase <- as.data.frame(spambase)
-names(spambase) <- c(1:58)
-
-spambase <- spambase[sample(nrow(spambase)), ]    # Shuffle dataset
-
-# Remove rows 55-57 (which don't calculate frequency of a word in an email)
-# and convert the remaining values from real numbers to 1s and 0s
-bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values)
-bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58]) 
-bernoulli_spambase <- as.data.frame(bernoulli_spambase)
-
-# Perform K-fold cross-validation on dataset
-folds <- list()
-
-folds <- split(bernoulli_spambase, sample(1:NUM_FOLDS, nrow(bernoulli_spambase), replace = T))
-accuracy_list <- list()
-
-print("Confusion Matrices for each fold:")
-for (i in 1:NUM_FOLDS)
+run_program <- function(num)
 {
-  test_set <- folds[[i]]
-  training_set <- matrix(, nrow = 0, ncol = 55)
-  for (j in 1:NUM_FOLDS)
+  NUM_FOLDS <- 10
+  
+  set.seed(1)     # Set a seed so that results are reproducible
+  
+  spambase <- read.csv(file = "spambase.csv", header = FALSE, sep = ",")
+  spambase <- as.data.frame(spambase)
+  names(spambase) <- c(1:58)
+  
+  spambase <- spambase[sample(nrow(spambase)), ]    # Shuffle dataset
+  
+  # Remove rows 55-57 (which don't calculate frequency of a word in an email)
+  # and convert the remaining values from real numbers to 1s and 0s
+  bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values, num=num)
+  bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58]) 
+  bernoulli_spambase <- as.data.frame(bernoulli_spambase)
+  
+  # Perform K-fold cross-validation on dataset
+  folds <- list()
+  
+  folds <- split(bernoulli_spambase, sample(1:NUM_FOLDS, nrow(bernoulli_spambase), replace = T))
+  accuracy_list <- list()
+  
+  print("Confusion Matrices for each fold:")
+  print("TN   |   FP")
+  print("-----|-----")
+  print("FN   |   TP")
+  
+  for (i in 1:NUM_FOLDS)
   {
-    if (j != i)
+
+    
+    test_set <- folds[[i]]
+    training_set <- matrix(, nrow = 0, ncol = 55)
+    for (j in 1:NUM_FOLDS)
     {
-      training_set <- rbind(training_set, folds[[j]])
+      if (j != i)
+      {
+        training_set <- rbind(training_set, folds[[j]])
+      }
     }
+    mean_matrix <- get_conditional_probabilities(dataset = training_set)
+    results_matrix <- get_class_predictions(dataset = test_set, mean_matrix = mean_matrix)
+    confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
+    accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
+    accuracy_list[[i]] <- accuracy
   }
-  mean_matrix <- get_conditional_probabilities(dataset = training_set)
-  results_matrix <- get_class_predictions(dataset = test_set, mean_matrix = mean_matrix)
-  confusion_matrix <- predict(dataset = test_set, results_matrix = results_matrix)
-  accuracy <- get_accuracy(confusion_matrix = confusion_matrix)
-  accuracy_list[[i]] <- accuracy
+  
+  print("Accuracy of each fold (%):")
+  print(accuracy_list)
+  print("Average Accuracy (%):")
+  print(mean(unlist(accuracy_list)))
+  print("Max Accuracy (%):")
+  print(max(unlist(accuracy_list)))
+  print("Min Accuracy (%):")
+  print(min(unlist(accuracy_list)))
+  print("Standard Deviation:")
+  print(sd(unlist(accuracy_list)))
 }
 
-print("Accuracy of each fold (%):")
-print(accuracy_list)
-print("Average Accuracy (%):")
-print(mean(unlist(accuracy_list)))
-print("Max Accuracy (%):")
-print(max(unlist(accuracy_list)))
-print("Min Accuracy (%):")
-print(min(unlist(accuracy_list)))
-print("Standard Deviation:")
-print(sd(unlist(accuracy_list)))
+
+
+thresholds <- c(3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4)
+len <- length(thresholds)
+for (i in 1:len)
+{
+  print("Threshold:")
+  print(thresholds[[i]])
+  run_program(thresholds[[i]])
+}
