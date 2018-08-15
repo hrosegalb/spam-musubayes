@@ -1,0 +1,96 @@
+Setup and Build Instructions:
+
+To run this program, make sure you have R version 3.5.0 (2018-04-23) ("Joy in Playing") or higher installed 
+(https://www.r-project.org/). Though not strictly necessary to run the program, if you'd like to use RStudio, make sure you
+have RStudio Desktop Version 1.1 or higher installed (https://www.rstudio.com/products/rstudio/download/#download).
+
+Clone the repository into a directory you wish to work in. If using RStudio, make sure RStudio's built-in console and terminal
+are pointing towards the correct directory (in the console, "getwd()" and "setwd('path/to/folder')" are used to get the working 
+directory and set the working directory, respectively). Select the script you would like to run and run it! In RStudio, that 
+can be done by opening the file and clicking "Source". From the terminal, that can be done by typing "Rscript <file_name>.R".
+
+About the scripts:
+There are two models a user can choose from for prediction: a Gaussian Naïve Bayes model ("gaussian_spam_script.R") or a
+Multivariate Bernoulli Naïve Bayes model ("bernoulli_spam_script.R"). Both scripts expect to read in a CSV file of the Spambase 
+data set, which needs to be in your current working directory and called "spambase.csv". Assuming you make no changes to the 
+repo after you've cloned it, you will have "spambase.csv" in your current working directory. Both models output to the console
+a confusion matrix of the predictions for each fold as well as the model's classification accuracy for each fold (number of
+folds is set to 10). The average accuracy percentage across all folds, as well as the max accuracy, min accuracy, and standard
+deviation is also printed. As of 08/11/2018, the "gaussian_spam_script.R" model has an average classification accuracy of 
+~81.6% while the "bernoulli_spam_script.R" model has a deplorable classification accuracy of ~36.1%.
+
+Description of "gaussian_spam_script.R":
+Upon execution, the script reads in the Spambase dataset and converts it to a dataframe. It randomizes the rows in the dataset,
+but sets a seed beforehand so that results are reproducible. It then randomly separates the data into a list of 10 dataframes
+(folds). It initializes a list to store the prediction accuracies (floats representing the percentage of predictions that were 
+correct) of each test set. Looping through the folds, it combines 9 of them together for the training set and reserves 1 fold
+to be the test set. While looping, it performs the Gaussian Naive Bayes Algorithm and outputs its results to the console.
+
+"gaussian_spam_script.R" Functions:
+mean_standard_dev: Expects the training set as an argument and returns a matrix of the means and standard deviations of 
+                   each feature for both classes (i.e. the "spam" class and "non-spam" class). Matrix specs:
+                   mean_sd_matrix[i, 1] = mean for that feature given that it's spam
+                   mean_sd_matrix[i, 2] = mean for that feature given that it's not spam
+                   mean_sd_matrix[i, 3] = standard deviation for that feature given that it's spam
+                   mean_sd_matrix[i, 4] = standard deviation for that feature given that it's not spam
+
+get_class_predictions: Expects the test set and matrix of feature means and standard deviations as arguments. Creates a matrix
+                       of class likelihoods for each data sample using the Gaussian function and returns that to the calling
+                       routine. Matrix specs:
+                       probability_matrix[i, 1] = probability of that data sample being spam
+                       probability_matrix[i, 2] = probability of that data sample not being spam
+
+predict: Expects the test dataset and a matrix of spam/non-spam probabilities for each data sample and compares the prediction 
+         of each data sample in the probability matrix with the label in the test data. It then returns a confusion matrix to
+         the calling routine. Matrix specs:
+         confusion_matrix[1, 1] = Actual is non-spam and Prediction is non-spam (True Negative [TN])
+         confusion_matrix[1, 2] = Actual is non-spam and Prediction is spam (False Positive [FP])
+         confusion_matrix[2, 1] = Actual is spam and Prediction is non-spam (False Negative [FN])
+         confusion_matrix[2, 2] = Actual is spam and Prediction is spam (True Positive [TP])
+
+get_accuracy: Expects a confusion matrix as an argument. Returns a float representing the accuracy percentage of a confusion
+              matrix: 
+              Accuracy = ((TP+TN) / (TP+FP+FN+TN)) * 100
+
+Description of "bernoulli_spam_script.R":
+Upon execution, the script reads in the Spambase dataset and converts it to a dataframe. It randomizes the rows in the dataset, 
+but sets a seed beforehand so that results are reproducible. It removes columns 55-57 (which don't have to do with frequency of
+a word or character in an email) and converts the remaining values from real numbers to 1s and 0s. It then randomly separates 
+the data into a list of 10 dataframes (folds). It initializes a list to store the prediction accuracies (floats representing
+the percentage of predictions that were correct) of each test set. Looping through the folds, it combines 9 of them together 
+for the training set and reserves 1 fold to be the test set. While looping, it performs the Multivariate Bernoulli Naive Bayes 
+Algorithm and outputs its results to the console.
+
+"bernoulli_spam_script.R" Functions:
+convert_values: Expects float as an argument and converts it to a 1 or 0 based on whether it's greater than or less than a
+                threshold. Returns the result.
+
+get_conditional_probabilities: Expects training set as an argument. Calculates frequency of each feature for both classes in 
+                               the training dataset and stores results in mean_matrix, which it returns to the calling 
+                               routine. Matrix specs:
+                               *mean_matrix[1, j] = P(x_j = 0 | 0) => "Probability that the feature equals 0, given that it 
+                               belongs to ham class"
+                               *mean_matrix[2, j] = P(x_j = 1 | 0) => "Probability that the feature equals 1, given that it 
+                               belongs to ham class"
+                               *mean_matrix[3, j] = P(x_j = 0 | 1) => "Probability that the feature equals 0, given that it 
+                               belongs to spam class"
+                               *mean_matrix[4, j] = P(x_j = 1 | 1) => "Probability that the feature equals 1, given that it                   
+                               belongs to spam class"
+                               
+get_class_predictions: Expects the test set and matrix of feature means and standard deviations as arguments. Creates a matrix
+                       of class likelihoods for each data sample using the Gaussian function and returns that to the calling
+                       routine. Matrix specs:
+                       probability_matrix[i, 1] = probability of that data sample being spam
+                       probability_matrix[i, 2] = probability of that data sample not being spam
+
+predict: Expects the test dataset and a matrix of spam/non-spam probabilities for each data sample and compares the prediction 
+         of each data sample in the probability matrix with the label in the test data. It then returns a confusion matrix to
+         the calling routine. Matrix specs:
+         confusion_matrix[1, 1] = Actual is non-spam and Prediction is non-spam (True Negative [TN])
+         confusion_matrix[1, 2] = Actual is non-spam and Prediction is spam (False Positive [FP])
+         confusion_matrix[2, 1] = Actual is spam and Prediction is non-spam (False Negative [FN])
+         confusion_matrix[2, 2] = Actual is spam and Prediction is spam (True Positive [TP])
+
+get_accuracy: Expects a confusion matrix as an argument. Returns a float representing the accuracy percentage of a confusion
+              matrix: 
+              Accuracy = ((TP+TN) / (TP+FP+FN+TN)) * 100
