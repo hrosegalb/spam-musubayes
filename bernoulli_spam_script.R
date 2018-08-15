@@ -17,11 +17,12 @@
 
 convert_values <- function(x)
 {
+  # Function converts real number value to a 1 or 0 and returns result.
+  
   threshold <- 4.1    # This number was obtained after experimenting with an extensive range of thresholds.
                       # As of 8/11/18, 4.1 is the threshold which allows the model to obtain the highest 
                       # average percentage of accuracy (~36%) without uniformly predicting 'spam' for each sample.
   
-  # Function converts real number value to a 1.
   if (x >= threshold)
   {
     x = 1
@@ -35,11 +36,13 @@ convert_values <- function(x)
 
 get_conditional_probabilities <- function(dataset)
 {
-  # Calculates conditional probability for each feature in the training dataset and stores results in mean_matrix.
-  # mean_matrix[1, j] = P(x_j = 0 | 0) => "Probability that the feature equals 0, given that the outcome is ham"
-  # mean_matrix[2, j] = P(x_j = 1 | 0) => "Probability that the feature equals 1, given that the outcome is ham"
-  # mean_matrix[3, j] = P(x_j = 0 | 1) => "Probability that the feature equals 0, given that the outcome is spam"
-  # mean_matrix[4, j] = P(x_j = 1 | 1) => "Probability that the feature equals 1, given that the outcome is spam"
+  # Expects training set as an argument.
+  # Calculates frequency of each feature for both classes in the training dataset and stores results in mean_matrix.
+  # mean_matrix[1, j] = P(x_j = 0 | 0) => "Probability that the feature equals 0, given that it belongs to ham class"
+  # mean_matrix[2, j] = P(x_j = 1 | 0) => "Probability that the feature equals 1, given that it belongs to ham class"
+  # mean_matrix[3, j] = P(x_j = 0 | 1) => "Probability that the feature equals 0, given that it belongs to spam class"
+  # mean_matrix[4, j] = P(x_j = 1 | 1) => "Probability that the feature equals 1, given that it belongs to spam class"
+  # Returns mean_matrix to the calling routine.
   
   num_total_rows <- nrow(dataset)
   num_total_cols <- ncol(dataset)
@@ -214,7 +217,7 @@ names(spambase) <- c(1:58)
 # Used https://discuss.analyticsvidhya.com/t/how-to-shuffle-rows-in-a-data-frame-in-r/2202 as a reference. 
 spambase <- spambase[sample(nrow(spambase)), ]
   
-# Remove rows 55-57 (which don't have to do with frequency of a word in an email)
+# Remove columns 55-57 (which don't have to do with frequency of a word or character in an email)
 # and convert the remaining values from real numbers to 1s and 0s
 bernoulli_spambase <- apply(spambase[1:54], MARGIN = 1:2, FUN = convert_values)
 bernoulli_spambase <- cbind(bernoulli_spambase, spambase[ , 58]) 

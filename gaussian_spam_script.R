@@ -14,12 +14,13 @@
 
 mean_standard_dev <- function(dataset)
 {
-  # Calculate mean and standard deviation of each feature in the training
-  # dataset. Store the results in a matrix.
-  # mean_sd_matrix[i][1] = mean for that feature given that it's spam
-  # mean_sd_matrix[i][2] = mean for that feature given that it's not spam
-  # mean_sd_matrix[i][3] = standard deviation for that feature given that it's spam
-  # mean_sd_matrix[i][4] = standard deviation for that feature given that it's not spam
+  # Expects the training set.
+  # Calculates mean and standard deviation of each feature in the training
+  # dataset. Stores the results in a matrix, which is returned to the calling routine.
+  # mean_sd_matrix[i, 1] = mean for that feature given that it's spam
+  # mean_sd_matrix[i, 2] = mean for that feature given that it's not spam
+  # mean_sd_matrix[i, 3] = standard deviation for that feature given that it's spam
+  # mean_sd_matrix[i, 4] = standard deviation for that feature given that it's not spam
   
   # Create an empty matrix to put feature means/standard deviations in
   num_col <- ncol(dataset)
@@ -52,10 +53,12 @@ mean_standard_dev <- function(dataset)
 
 get_class_predictions <- function(dataset, mean_sd_matrix)
 {
+  # Expects the test set and matrix of feature means and standard deviations.
   # Creates a matrix of probabilities where each row represents a data sample.
   # Each column represents:
   # probability_matrix[i, 1] = probability of that data sample being spam
   # probability_matrix[i, 2] = probability of that data sample not being spam
+  # Returns probability_matrix to the calling routine.
   
   num_samples <- nrow(dataset)
   num_cols <- ncol(dataset)
@@ -114,10 +117,11 @@ predict <- function(dataset, probability_matrix)
   # Takes a matrix of spam/non-spam probabilities of each data sample and the test dataset and 
   # compares the prediction of each data sample in the probability_matrix with the target 
   # in the test data. It then creates a confusion matrix where:
-  # confusion_matrix[1][1] = Actual is non-spam and Prediction is non-spam (TN)
-  # confusion_matrix[1][2] = Actual is non-spam and Prediction is spam (FP)
-  # confusion_matrix[2][1] = Actual is spam and Prediction is non-spam (FN)
-  # confusion_matrix[2][2] = Actual is spam and Prediction is spam (TP)
+  # confusion_matrix[1, 1] = Actual is non-spam and Prediction is non-spam (TN)
+  # confusion_matrix[1, 2] = Actual is non-spam and Prediction is spam (FP)
+  # confusion_matrix[2, 1] = Actual is spam and Prediction is non-spam (FN)
+  # confusion_matrix[2, 2] = Actual is spam and Prediction is spam (TP)
+  # Returns confusion matrix to the calling routine.
   
   confusion_matrix <- matrix(0, nrow = 2, ncol = 2)
   num_samples <- nrow(probability_matrix)
@@ -137,7 +141,8 @@ predict <- function(dataset, probability_matrix)
 
 get_accuracy <- function(confusion_matrix)
 {
-  # Returns the accuracy percentage of a confusion matrix: 
+  # Expects a confusion matrix as an argument.
+  # Returns a float representing the accuracy percentage of a confusion matrix: 
   # (TP+TN) / (TP+FP+FN+TN) * 100
   
   accuracy <- sum(diag(confusion_matrix))
