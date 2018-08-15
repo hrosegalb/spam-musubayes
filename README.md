@@ -1,4 +1,6 @@
 # spam-musubayes by Hannah Galbraith (hrg@pdx.edu)
+Copyright 2018 Hannah Galbraith
+
 A program that classifies spam versus non-spam emails in the Spambase data set using different versions of Naïve Bayes. `gaussian_spam_script` uses Gaussian Naïve Bayes to predict whether an email sample in the Spambase data set (https://archive.ics.uci.edu/ml/datasets/spambase) is spam or not. `bernoulli_spam_script` also predicts whether an email sample in the Spambase data set is spam or not, but uses Multivariate Bernoulli Naive Bayes as opposed to Gaussian by using a subset of the features in the data set and converting the features' real number values to '1's and '0's: '1's indicate that the word is present while '0's indicate the absence of that word in the sample.
 
 # Spambase Data Set Background Information
