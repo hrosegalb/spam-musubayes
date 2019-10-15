@@ -12,9 +12,9 @@ Features 49 through 54 are continuous real attributes which represent the percen
 
 Feature 55 is a continuous real attribute that represents the average length of uninterrupted sequences of capital letters. 
 
-Feature 56 is a continuous integer attribute that represents the length of the longest uninterrupted sequence of capital letters. 
+Feature 56 is a integer attribute that represents the length of the longest uninterrupted sequence of capital letters. 
 
-Feature 57 is a continuous integer attribute that represents the total number of capital letters in the e-mail. 
+Feature 57 is a integer attribute that represents the total number of capital letters in the e-mail. 
 
 The 58th column in the dataset stores a nominal {0,1} class attribute of type `spam`. The sample is given a '1' if the email was considered spam and a '0' if it was not.
 
